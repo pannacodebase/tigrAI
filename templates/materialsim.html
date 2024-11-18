@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Material Simulation</title>
+    <!-- Include Chart.js library -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        /* General Body Styles */
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #1f3c6d, #16324b);
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Container for all content */
+        .container {
+            text-align: center;
+            width: 80%;
+            max-width: 800px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        h1 {
+            font-size: 3rem;
+            color: #fff;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+
+        p {
+            font-size: 1.1rem;
+            color: #dcdcdc;
+            margin-bottom: 30px;
+        }
+
+        /* Dropdown Styles */
+        label {
+            font-size: 1.2rem;
+            color: #e0e0e0;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        select {
+            font-size: 1.1rem;
+            padding: 10px;
+            border-radius: 8px;
+            border: none;
+            background-color: #2a3c55;
+            color: white;
+            width: 100%;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #5390d9;
+            box-shadow: 0 0 10px rgba(83, 144, 217, 0.7);
+        }
+
+        button {
+            background-color: #5390d9;
+            color: #fff;
+            padding: 12px 24px;
+            font-size: 1.2rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        button:hover {
+            background-color: #4078a5;
+            transform: translateY(-3px);
+        }
+
+        /* Canvas Styling */
+        canvas {
+            width: 100% !important;
+            height: 400px !important;
+            border-radius: 10px;
+            margin-top: 30px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Adding some custom shadows and transitions */
+        .container:hover {
+            transform: scale(1.03);
+            transition: transform 0.3s ease;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.2rem;
+            }
+
+            button {
+                font-size: 1rem;
+            }
+        }
+
+        /* Adding animated scroll to canvas */
+        canvas {
+            animation: fadeIn 1s ease-out;
+        }
+
+        /* Keyframe for fadeIn animation */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Material Simulation</h1>
+        <p>This page displays information related to material simulations.</p>
+
+        <!-- Dropdown to select material -->
+        <label for="material-select">Select Material:</label>
+        <select id="material-select">
+            <option value="Steel SAE 1015">Steel SAE 1015</option>
+            <option value="Steel SAE 1020">Steel SAE 1020</option>
+            <option value="Steel SAE 1022">Steel SAE 1022</option>
+        </select>
+
+        <button onclick="filterAndGenerateChart()">Generate Chart</button>
+
+        <!-- Canvas for Chart.js -->
+        <canvas id="chart"></canvas>
+    </div>
+
+    <script>
+        // Hardcoded dataset
+        const dataset = [
+            { Material: "Steel SAE 1015", Su: 421, Sy: 314, Bhn: 126 },
+            { Material: "Steel SAE 1015", Su: 424, Sy: 324, Bhn: 121 },
+            { Material: "Steel SAE 1020", Su: 448, Sy: 331, Bhn: 143 },
+            { Material: "Steel SAE 1020", Su: 441, Sy: 346, Bhn: 131 },
+            { Material: "Steel SAE 1022", Su: 503, Sy: 359, Bhn: 149 },
+            { Material: "Steel SAE 1022", Su: 483, Sy: 359, Bhn: 143 }
+        ];
+
+        // Function to filter data by selected material and generate chart
+        function filterAndGenerateChart() {
+            const selectedMaterial = document.getElementById('material-select').value;
+
+            // Filter the dataset based on the selected material
+            const filteredData = dataset.filter(item => item.Material === selectedMaterial);
+
+            // Prepare data for the chart
+            const suData = filteredData.map(item => item.Su);
+            const syData = filteredData.map(item => item.Sy);
+            const bhnData = filteredData.map(item => item.Bhn);
+            
+            // Generate the chart with filtered data
+            generateChart(filteredData.map(item => item.Material), suData, syData, bhnData);
+        }
+
+        // Function to generate chart using Chart.js
+        function generateChart(labels, suData, syData, bhnData) {
+            const ctx = document.getElementById('chart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Ultimate Tensile Strength (Su)',
+                            data: suData,
+                            borderColor: getRandomColor(),
+                            fill: false,
+                            tension: 0.1
+                        },
+                        {
+                            label: 'Yield Strength (Sy)',
+                            data: syData,
+                            borderColor: getRandomColor(),
+                            fill: false,
+                            tension: 0.1
+                        },
+                        {
+                            label: 'Brinell Hardness (Bhn)',
+                            data: bhnData,
+                            borderColor: getRandomColor(),
+                            fill: false,
+                            tension: 0.1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Material'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Value'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Helper function to generate a random color for chart lines
+        function getRandomColor() {
+            const letters = '0123456789ABCDEF';
+            let color = '#';
+            for (let i = 0; i < 6; i++) {
+                color += letters[Math.floor(Math.random() * 16)];
+            }
+            return color;
+        }
+    </script>
+</body>
+</html>

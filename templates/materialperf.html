@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stress-Strain Animation with Chart.js</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dat.gui"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            display: flex;
+            height: 100vh;
+        }
+        #sidebar {
+            width: 300px;
+            background: #f4f4f4;
+            padding: 15px;
+            height: 100%;
+            overflow-y: auto;
+        }
+        #chart-container {
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        #resultCard {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 300px;
+            padding: 15px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            max-height: 90%;
+            overflow-y: auto;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            font-weight: bold;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+        }
+        .card-title {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        #aiResponse {
+            font-size: 1rem;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+
+<div id="sidebar">
+    <h3>Material Stress-Strain Animation</h3>
+    
+    <!-- Material Selection -->
+    <div class="form-group">
+        <label for="material">Select Material:</label>
+        <select id="material">
+            <option value="steel">Steel</option>
+            <option value="rubber">Rubber</option>
+            <option value="plastic">Plastic</option>
+            <option value="aluminum">Aluminum</option>
+        </select>
+    </div>
+
+    <!-- Stress and Strain Parameters -->
+    <div class="form-group">
+        <label for="stress">Stress (MPa):</label>
+        <input type="range" id="stress" min="0" max="1500" value="500" step="10">
+    </div>
+    <div class="form-group">
+        <label for="strain">Strain (%):</label>
+        <input type="range" id="strain" min="0" max="50" value="5" step="0.1">
+    </div>
+
+    <div class="form-group">
+        <button id="generateButton">Generate Animation</button>
+    </div>
+</div>
+
+<div id="chart-container">
+    <canvas id="chartCanvas" width="600" height="400"></canvas>
+    <div id="resultCard">
+        <div class="card-title">AI Response</div>
+        <div id="aiResponse">Waiting for input...</div>
+    </div>
+</div>
+
+<script>
+// Material properties
+const materials = {
+    steel: { maxStrain: 15, elasticity: 200, color: '#aaaaaa' },
+    rubber: { maxStrain: 50, elasticity: 2, color: '#228b22' },
+    plastic: { maxStrain: 20, elasticity: 100, color: '#ff6347' },
+    aluminum: { maxStrain: 10, elasticity: 150, color: '#8a8a8a' }
+};
+
+// Default material
+let currentMaterial = 'steel';
+
+// Chart.js setup
+const ctx = document.getElementById('chartCanvas').getContext('2d');
+
+let chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: [0], // Initial value of stress/strain
+        datasets: [{
+            label: 'Deformation',
+            borderColor: materials[currentMaterial].color,
+            data: [0],
+            fill: false,
+            tension: 0.4
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            x: {
+                type: 'linear',
+                position: 'bottom'
+            },
+            y: {
+                min: 0,
+                max: 2
+            }
+        },
+        animations: {
+            tension: {
+                duration: 1000,
+                easing: 'easeOutBounce'
+            }
+        }
+    }
+});
+
+// Function to update material properties and graph
+function updateMaterial() {
+    const selectedMaterial = materials[currentMaterial];
+    chart.data.datasets[0].borderColor = selectedMaterial.color;
+    chart.update();
+}
+
+// Function to update the deformation graph based on stress and strain
+async function updateAnimation() {
+    const selectedMaterial = materials[currentMaterial];
+    const stress = document.getElementById('stress').value;
+    const strain = document.getElementById('strain').value;
+
+    // Calculate deformation factor based on stress, strain, and material's properties
+    const deformation = (stress / 1500) * (strain / 50) * selectedMaterial.maxStrain;
+
+    // Update the chart
+    chart.data.labels.push(stress);
+    chart.data.datasets[0].data.push(deformation);
+    chart.update();
+
+    // Send deformation data to Watson LLM
+    const aiResponse = await fetchWatsonResponse(stress, strain, deformation);
+    document.getElementById('aiResponse').innerHTML = `<strong>Explanation:</strong><p>${aiResponse}</p>`;
+}
+
+// Event listeners for controls
+document.getElementById('material').addEventListener('change', function() {
+    currentMaterial = this.value;
+    updateMaterial();
+});
+
+document.getElementById('stress').addEventListener('input', updateAnimation);
+document.getElementById('strain').addEventListener('input', updateAnimation);
+
+// Event listener for "Generate" button
+document.getElementById('generateButton').addEventListener('click', updateAnimation);
+
+// Function to get Bearer token using Fetch API
+async function getBearerToken(apiKey) {
+    const url = "https://iam.cloud.ibm.com/identity/token";
+    const headers = {
+        "Content-Type": "application/x-www-form-urlencoded"
+    };
+    const data = new URLSearchParams({
+        grant_type: "urn:ibm:params:oauth:grant-type:apikey",
+        apikey: apiKey
+    });
+
+    const response = await fetch(url, {
+        method: "POST",
+        headers: headers,
+        body: data
+    });
+
+    if (response.ok) {
+        const jsonResponse = await response.json();
+        return jsonResponse.access_token;
+    } else {
+        console.error("Error getting token:", response.status, await response.text());
+        return null;
+    }
+}
+
+// Function to make API request to Watsonx AI and pass deformation value
+async function fetchWatsonResponse(stress, strain, deformation) {
+    const token = await getBearerToken("wQUJk6W31jtZVB3xWSHuLlS04ARUl8mh8umm8NmtHB7O");
+    
+    if (!token) {
+        console.error("Failed to get Bearer token");
+        return "Error getting response from Watsonx AI.";
+    }
+
+    const url = "https://us-south.ml.cloud.ibm.com/ml/v1/text/generation?version=2023-05-29";
+    const headers = {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+    };
+
+    const prompt = `I am testing a material. The material is ${currentMaterial}. The stress applied is ${stress} MPa, and the strain is ${strain}%. Based on these parameters, the deformation calculated is ${deformation}. Please explain this in simple terms and how this could affect the material's behavior.`;
+
+    const payload = {
+        input: prompt,
+        model_id: "ibm/granite-13b-chat-v2",
+        project_id: "ca6a4785-a89e-49cd-87e7-2a1346b94c01",
+        parameters: {
+            temperature: 0.7,
+            max_new_tokens: 900,
+            min_new_tokens: 50,
+            decoding_method: "sample",
+            repetition_penalty: 2
+        }
+    };
+
+    const response = await fetch(url, {
+        method: "POST",
+        headers: headers,
+        body: JSON.stringify(payload)
+    });
+
+    if (response.ok) {
+        const result = await response.json();
+        return result.text || "No response from Watson.";
+    } else {
+        console.error("Error calling Watsonx AI:", response.status, await response.text());
+        return "Error calling Watsonx AI.";
+    }
+}
+</script>
+
+</body>
+</html>

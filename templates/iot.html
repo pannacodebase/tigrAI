@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IoT Lab Equipment Control</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        /* General reset and layout */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f0f4f8;
+            padding: 30px;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            font-size: 2.5rem;
+            margin-bottom: 40px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Title and description */
+        .device-control h3 {
+            font-size: 1.5rem;
+            color: #2980b9;
+            margin-bottom: 10px;
+        }
+
+        .device-control p {
+            color: #7f8c8d;
+            font-size: 1rem;
+        }
+
+        /* Form inputs */
+        input[type="text"] {
+            padding: 10px;
+            width: 60%;
+            margin-right: 10px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            font-size: 1rem;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 1.2rem;
+            color: #fff;
+            background-color: #2980b9;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        button:hover {
+            background-color: #3498db;
+        }
+
+        button i {
+            margin-right: 10px;
+        }
+
+        /* Response section */
+        .response {
+            margin-top: 40px;
+            padding: 20px;
+            background-color: #ecf0f1;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-size: 1rem;
+            color: #2c3e50;
+        }
+
+        .footer {
+            margin-top: 40px;
+            text-align: center;
+            font-size: 0.9rem;
+            color: #7f8c8d;
+        }
+
+        .footer a {
+            color: #2980b9;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Dynamic color changes for device status */
+        .status-on {
+            color: #27ae60;
+        }
+
+        .status-off {
+            color: #e74c3c;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>IoT Lab Equipment Control</h1>
+
+        <!-- Control Device Section -->
+        <div class="device-control">
+            <h3><i class="fas fa-cogs"></i> Control Device</h3>
+            <p>Enter the Device ID to control and select an action.</p>
+            <input type="text" id="deviceId" placeholder="e.g., oven01">
+            <button id="turnOnButton" onclick="controlDevice('turn_on')">
+                <i class="fas fa-power-off"></i> Turn On
+            </button>
+            <button id="turnOffButton" onclick="controlDevice('turn_off')">
+                <i class="fas fa-power-off"></i> Turn Off
+            </button>
+        </div>
+
+        <!-- Get Device Status Section -->
+        <div class="device-control">
+            <h3><i class="fas fa-info-circle"></i> Get Device Status</h3>
+            <p>Enter the Device ID to retrieve its current status.</p>
+            <input type="text" id="statusDeviceId" placeholder="e.g., oven01">
+            <button onclick="getDeviceStatus()">
+                <i class="fas fa-sync-alt"></i> Get Status
+            </button>
+        </div>
+
+        <!-- API Response Section -->
+        <div class="response">
+            <h3>API Response</h3>
+            <pre id="apiResponse">No response yet.</pre>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>&copy; 2024 IoT Lab Equipment | <a href="https://example.com">Privacy Policy</a></p>
+    </div>
+
+    <script>
+        const apiBaseURL = "https://ibm-wa-api.vercel.app/"; // Replace with your Flask app's URL if hosted elsewhere.
+
+        // Function to control a device (turn_on/turn_off)
+        async function controlDevice(action) {
+            const deviceId = document.getElementById("deviceId").value;
+            if (!deviceId) {
+                alert("Please enter a Device ID.");
+                return;
+            }
+
+            try {
+                const response = await fetch(`${apiBaseURL}/devices/${deviceId}/control`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ action })
+                });
+
+                const data = await response.json();
+                document.getElementById("apiResponse").textContent = JSON.stringify(data, null, 2);
+
+                // Update the button color and icon based on the action
+                if (data.status === "on") {
+                    document.getElementById("turnOnButton").classList.add("status-on");
+                    document.getElementById("turnOffButton").classList.remove("status-off");
+                    document.getElementById("turnOffButton").classList.add("status-off");
+                    document.getElementById("turnOnButton").innerHTML = `<i class="fas fa-power-off"></i> Turned On`;
+                } else {
+                    document.getElementById("turnOffButton").classList.add("status-off");
+                    document.getElementById("turnOnButton").classList.remove("status-on");
+                    document.getElementById("turnOnButton").classList.add("status-on");
+                    document.getElementById("turnOffButton").innerHTML = `<i class="fas fa-power-off"></i> Turned Off`;
+                }
+
+            } catch (error) {
+                document.getElementById("apiResponse").textContent = `Error: ${error.message}`;
+            }
+        }
+
+        // Function to get the status of a device
+        async function getDeviceStatus() {
+            const deviceId = document.getElementById("statusDeviceId").value;
+            if (!deviceId) {
+                alert("Please enter a Device ID.");
+                return;
+            }
+
+            try {
+                const response = await fetch(`${apiBaseURL}/devices/${deviceId}/status`);
+                const data = await response.json();
+                document.getElementById("apiResponse").textContent = JSON.stringify(data, null, 2);
+
+                // Update the button color based on device status
+                if (data.status === "on") {
+                    document.getElementById("turnOnButton").classList.add("status-on");
+                    document.getElementById("turnOffButton").classList.remove("status-off");
+                    document.getElementById("turnOffButton").classList.add("status-off");
+                    document.getElementById("turnOnButton").innerHTML = `<i class="fas fa-power-off"></i> Turned On`;
+                } else {
+                    document.getElementById("turnOffButton").classList.add("status-off");
+                    document.getElementById("turnOnButton").classList.remove("status-on");
+                    document.getElementById("turnOnButton").classList.add("status-on");
+                    document.getElementById("turnOffButton").innerHTML = `<i class="fas fa-power-off"></i> Turned Off`;
+                }
+
+            } catch (error) {
+                document.getElementById("apiResponse").textContent = `Error: ${error.message}`;
+            }
+        }
+    </script>
+
+</body>
+
+</html>

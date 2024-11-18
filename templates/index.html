@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time Updates</title>
+    <style>
+        /* General Body Styles */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+            background-color: #f4f4f4;
+        }
+
+        /* Navbar Styles */
+        nav {
+            background-color: #fff; /* White navbar */
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 10000;
+        }
+
+        /* Logo Styles */
+        #logo {
+            height: 40px; /* Adjust as needed */
+            width: auto;
+        }
+
+        /* Content below Navbar */
+        .content {
+            padding-top: 60px; /* To avoid content being hidden behind the navbar */
+        }
+
+        /* Message History Styles */
+        #history {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            width: 200px;
+            background-color: white;
+            border: 1px solid #ddd;
+            padding: 10px;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
+            font-size: 14px;
+            z-index: 1000;
+            height: 30px;
+            overflow: hidden;
+            transition: height 0.3s ease;
+        }
+
+        #history.expanded {
+            height: 200px;
+        }
+
+        #history h3 {
+            margin: 0;
+            font-size: 16px;
+            text-align: center;
+        }
+
+        #history .message {
+            margin-bottom: 5px;
+        }
+
+        /* Hover effect to expand the message history card */
+        #history:hover {
+            height: 200px;
+        }
+
+        /* Watson Chat Styles */
+        #watson-chat {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 300px;
+            height: 400px;
+            z-index: 9999;
+        }
+
+        /* Styling for iframe container */
+        #iframe-container {
+            position: absolute;
+            top: 60px; /* Default height if JavaScript fails */
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 1;
+            background-color: #f4f4f4;
+            overflow: hidden;
+        }
+    
+        #iframe-container iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            overflow: auto; /* Enable scrolling within iframe */
+        }
+
+        /* Button Styles (Optional) */
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav>
+        <img id="logo" src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo">
+        <!-- Add any other navbar content, like links, if needed -->
+    </nav>
+
+    <!-- Main Content -->
+    <div class="content">
+        <div id="history">
+            <h3>Message History</h3>
+            <div class="message">Waiting for updates...</div>
+        </div>
+
+        <div id="watson-chat"></div>
+
+        <!-- Dynamic iframe container -->
+        <div id="iframe-container" style="display:none;">
+            <iframe id="dynamic-iframe"></iframe>
+        </div>
+    </div>
+
+    <script>
+        // Function to refresh message history using AJAX
+        async function fetchHistory() {
+            try {
+                const response = await fetch('/history');
+                if (response.ok) {
+                    const data = await response.json();
+                    const historyDiv = document.getElementById('history');
+                    const currentMessages = historyDiv.querySelectorAll('.message');
+    
+                    // Clear previous messages but keep the header
+                    historyDiv.innerHTML = '<h3>Message History</h3>';
+    
+                    // Append each new message from the response
+                    data.forEach(message => {
+                        const newMessage = document.createElement('div');
+                        newMessage.classList.add('message');
+                        newMessage.textContent = message.response;
+                        historyDiv.appendChild(newMessage);
+                    });
+    
+                    // Check for a page to load
+                    if (data.length > 0 && data[data.length - 1].page_to_load) {
+                        const pageToLoad = data[data.length - 1].page_to_load;
+                        if (pageToLoad) {
+                            // Show the iframe container and load the page
+                            const iframeContainer = document.getElementById('iframe-container');
+                            const iframe = document.getElementById('dynamic-iframe');
+                            iframeContainer.style.display = 'block';  // Make iframe container visible
+                            iframe.src = '/' + pageToLoad;  // Set iframe source to the route that serves the page
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error("Error fetching message history:", error);
+            }
+        }
+    
+        // Refresh the message history every 2 seconds
+        setInterval(fetchHistory, 20000);
+
+        window.watsonAssistantChatOptions = {
+            integrationID: "316dc4d3-6259-4fe4-86b4-157690578e9e", // The ID of this integration.
+            region: "us-south", // The region your integration is hosted in.
+            serviceInstanceID: "888acf81-cd8b-4113-acfd-764befc52d44", // The ID of your service instance.
+            onLoad: async (instance) => { await instance.render(); }
+        };
+
+        setTimeout(function() {
+            const t = document.createElement('script');
+            t.src = "https://web-chat.global.assistant.watson.appdomain.cloud/versions/" + (window.watsonAssistantChatOptions.clientVersion || 'latest') + "/WatsonAssistantChatEntry.js";
+            document.head.appendChild(t);
+        });
+    </script>
+
+</body>
+</html>

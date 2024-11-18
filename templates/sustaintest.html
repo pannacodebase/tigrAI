@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sustainability Testing</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        h1 {
+            text-align: center;
+            margin-top: 50px;
+        }
+
+        .content {
+            padding: 20px;
+            background-color: white;
+            margin: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .section {
+            margin-bottom: 20px;
+        }
+
+        .section h2 {
+            color: #2e8b57;
+        }
+
+        .section p {
+            font-size: 16px;
+        }
+
+        /* Button Styles for Speech */
+        .speech-btn {
+            display: block;
+            margin: 20px auto;
+            padding: 10px 20px;
+            background-color: #2e8b57;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .speech-btn:hover {
+            background-color: #276c42;
+        }
+
+        /* Chart Container */
+        .chart-container {
+            width: 30%;
+            margin: 10px;
+            display: inline-block;
+            vertical-align: top;
+        }
+
+        canvas {
+            width: 100% !important;
+            height: 200px !important;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Sustainability Testing: Long-Term Environmental Impact</h1>
+
+    <div class="content">
+        <div class="section">
+            <h2>Carbon Footprint Prediction</h2>
+            <p id="carbon-footprint">Learn about the environmental impact of various materials, focusing on their carbon emissions throughout the product lifecycle.</p>
+        </div>
+
+        <div class="section">
+            <h2>Degradation Rate</h2>
+            <p id="degradation-rate">Explore the expected degradation rates of materials and their environmental longevity, affecting ecosystem sustainability.</p>
+        </div>
+
+        <div class="section">
+            <h2>Recyclability</h2>
+            <p id="recyclability">Understand the recyclability of materials and how their reusability can help minimize environmental impact.</p>
+        </div>
+    </div>
+
+    <!-- Button to trigger speech synthesis -->
+    <button class="speech-btn" onclick="speakText()">Read Aloud</button>
+
+    <!-- Chart Containers -->
+    <div class="chart-container">
+        <h2>Carbon Footprint Simulation</h2>
+        <canvas id="carbonChart"></canvas>
+    </div>
+
+    <div class="chart-container">
+        <h2>Degradation Rate Simulation</h2>
+        <canvas id="degradationChart"></canvas>
+    </div>
+
+    <div class="chart-container">
+        <h2>Recyclability Comparison</h2>
+        <canvas id="recyclabilityChart"></canvas>
+    </div>
+
+    <script>
+        // Function to speak the content of the page using SpeechSynthesis API
+        function speakText() {
+            // Combine the text from all sections
+            const carbonFootprintText = document.getElementById('carbon-footprint').innerText;
+            const degradationRateText = document.getElementById('degradation-rate').innerText;
+            const recyclabilityText = document.getElementById('recyclability').innerText;
+            
+            const textToRead = carbonFootprintText + " " + degradationRateText + " " + recyclabilityText;
+
+            // Check if speech synthesis is supported
+            if ('speechSynthesis' in window) {
+                const speech = new SpeechSynthesisUtterance(textToRead);
+                speech.lang = 'en-US';  // Set language to English
+                speech.pitch = 1;       // Set pitch (normal voice)
+                speech.rate = 1;        // Set rate (normal speed)
+
+                // Speak the text
+                window.speechSynthesis.speak(speech);
+            } else {
+                alert('Text-to-speech not supported in this browser.');
+            }
+        }
+
+        // Carbon Footprint Chart
+        const carbonCtx = document.getElementById('carbonChart').getContext('2d');
+        const carbonChart = new Chart(carbonCtx, {
+            type: 'line',
+            data: {
+                labels: ['Product A', 'Product B', 'Product C', 'Product D', 'Product E'],
+                datasets: [{
+                    label: 'Carbon Footprint (kg CO2)',
+                    data: [10, 15, 7, 20, 12],
+                    fill: false,
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        // Degradation Rate Chart
+        const degradationCtx = document.getElementById('degradationChart').getContext('2d');
+        const degradationChart = new Chart(degradationCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Product A', 'Product B', 'Product C', 'Product D', 'Product E'],
+                datasets: [{
+                    label: 'Degradation Rate (Years)',
+                    data: [5, 3, 7, 2, 4],
+                    backgroundColor: 'rgba(255, 159, 64, 0.2)',
+                    borderColor: 'rgba(255, 159, 64, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        // Recyclability Chart (Pie chart)
+        const recyclabilityCtx = document.getElementById('recyclabilityChart').getContext('2d');
+        const recyclabilityChart = new Chart(recyclabilityCtx, {
+            type: 'pie',
+            data: {
+                labels: ['Product A', 'Product B', 'Product C', 'Product D', 'Product E'],
+                datasets: [{
+                    label: 'Recyclability (%)',
+                    data: [80, 50, 60, 90, 40],
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.2)',
+                        'rgba(54, 162, 235, 0.2)',
+                        'rgba(255, 206, 86, 0.2)',
+                        'rgba(75, 192, 192, 0.2)',
+                        'rgba(153, 102, 255, 0.2)'
+                    ],
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(tooltipItem) {
+                                return tooltipItem.label + ": " + tooltipItem.raw + "%";
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+
+</body>
+</html>
