@@ -99,3 +99,22 @@ We welcome contributions to TigrAI! To contribute:
 2. Create a new branch.
 3. Submit a pull request with your changes.
 
+## Installation Requirements
+
+To run TigrAI locally, install the following dependencies:
+
+```bash
+pip install blinker==1.7.0
+pip install click==8.1.7
+pip install colorama==0.4.6
+pip install Flask==3.0.2
+pip install itsdangerous==2.1.2
+pip install Jinja2==3.1.3
+pip install MarkupSafe==2.1.5
+pip install Werkzeug==3.0.1
+pip install requests
+pip install dash
+pip install dash-core-components
+pip install dash-html-components
+pip install plotly
+```
