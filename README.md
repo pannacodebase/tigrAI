@@ -28,25 +28,6 @@ TigrAI utilizes the following:
 - **Plotly**: Data visualization for charts and graphs.
 - **IBM Watson Assistant**: For real-time intelligent recommendations.
 
-## Installation Requirements
-
-To run TigrAI locally, install the following dependencies:
-
-```bash
-pip install blinker==1.7.0
-pip install click==8.1.7
-pip install colorama==0.4.6
-pip install Flask==3.0.2
-pip install itsdangerous==2.1.2
-pip install Jinja2==3.1.3
-pip install MarkupSafe==2.1.5
-pip install Werkzeug==3.0.1
-pip install requests
-pip install dash
-pip install dash-core-components
-pip install dash-html-components
-pip install plotly
-
 ## Market Scope
 - **Total Addressable Market (TAM)**:  
   The global material testing market is projected to reach **$9.2 billion by 2033**, driven by the growing need for faster, more accurate material discovery and testing across industries such as aerospace, construction, renewable energy, and medical devices.
